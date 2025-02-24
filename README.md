@@ -1,0 +1,1 @@
+# gophermart_accrual_adapter
