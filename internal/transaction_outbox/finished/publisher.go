@@ -9,8 +9,10 @@ import (
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/logging"
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/models"
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/transaction_outbox"
+	"github.com/vysogota0399/gophermart_protos/gen/common"
 	"github.com/vysogota0399/gophermart_protos/gen/events"
 	"go.uber.org/zap"
+	"google.golang.org/genproto/googleapis/type/money"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -43,10 +45,10 @@ func NewPublisher(
 func (p *Publisher) Publish(ctx context.Context, e *models.Event) error {
 	accrual := events.AccrualProcessed{
 		Event: &events.AccrualProcessed_FinishedEvent{
-			FinishedEvent: &events.FinishedEvent{
-				EventUuid: e.UUID,
-				OrderUuid: e.Meta.OrderUUID,
-				Amount:    e.Meta.Amount,
+			FinishedEvent: &events.AccrualFinishedEvent{
+				EventUuid: &common.Uuid{Value: e.UUID},
+				OrderUuid: &common.Uuid{Value: e.Meta.OrderUUID},
+				Amount:    &money.Money{Units: e.Meta.Amount},
 			},
 		},
 	}

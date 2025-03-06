@@ -117,7 +117,7 @@ func (rep *OrderEventsRepository) SetStateFinished(ctx context.Context, in *mode
 	return tx.Commit()
 }
 
-func (rep *OrderEventsRepository) setStateTX(ctx context.Context, uuid string, newState string, tx *sql.Tx) error {
+func (rep *OrderEventsRepository) setStateTX(ctx context.Context, uuid string, newState int32, tx *sql.Tx) error {
 	if _, err := tx.ExecContext(ctx,
 		`
 			UPDATE events

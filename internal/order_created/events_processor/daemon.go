@@ -9,8 +9,9 @@ import (
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/models"
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/order_created/clients"
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/order_created/config"
+	"github.com/vysogota0399/gophermart_protos/gen/common"
 	"github.com/vysogota0399/gophermart_protos/gen/events"
-	"github.com/vysogota0399/gophermart_protos/gen/services/denormalized_order"
+	"github.com/vysogota0399/gophermart_protos/gen/queries/order_details"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
@@ -35,7 +36,7 @@ type EventsRepository interface {
 }
 
 type OrderClient interface {
-	Find(ctx context.Context, number string) (*denormalized_order.DenormalizedOrder, error)
+	Find(ctx context.Context, number string) (*order_details.OrderDetailsResponse, error)
 }
 
 type AccrualClient interface {
@@ -136,7 +137,7 @@ func (dmn *Daemon) processEvent(ctx context.Context) error {
 		goods = append(
 			goods,
 			clients.CalculateParamsProduct{
-				Price:       p.Price,
+				Price:       p.Price.Units,
 				Description: p.Name,
 			},
 		)
@@ -161,8 +162,8 @@ func (dmn *Daemon) processEvent(ctx context.Context) error {
 		ctx,
 		&events.OrderCreated{
 			Number:    order.Number,
-			EventUuid: e.UUID,
-			Uuid:      e.Meta.OrderUUID,
+			EventUuid: &common.Uuid{Value: e.UUID},
+			Uuid:      &common.Uuid{Value: e.Meta.OrderUUID},
 		},
 	); err != nil {
 		e.Meta.Error = err.Error()

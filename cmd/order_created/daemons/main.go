@@ -32,7 +32,7 @@ func CreateApp() fx.Option {
 			events_processor.NewDaemon,
 			fx.Annotate(repositories.NewOrderEventsRepository, fx.As(new(events_processor.EventsRepository))),
 			fx.Annotate(accruals_queue.NewPS, fx.As(new(events_processor.AccrualsQueue))),
-			fx.Annotate(clients.NewDenormalizedOrderClient, fx.As(new(events_processor.OrderClient))),
+			fx.Annotate(clients.NewOrderDetailsClient, fx.As(new(events_processor.OrderClient))),
 			fx.Annotate(clients.NewAccrualClient, fx.As(new(events_processor.AccrualClient))),
 			fx.Annotate(repositories.NewAccrualEventsRepository, fx.As(new(repositories.AccrualEvents))),
 

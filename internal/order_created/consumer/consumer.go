@@ -114,13 +114,13 @@ func (cns *Consumer) processMessage(ctx context.Context) error {
 	if err := cns.events.SaveOrderCreated(
 		ctx,
 		&models.Event{
-			UUID:  payload.EventUuid,
+			UUID:  payload.EventUuid.Value,
 			State: models.NewState,
 			Name:  repositories.OrderCreatedEventName,
 			Meta: &models.Meta{
 				OrderNumber: payload.Number,
-				State:       payload.State,
-				OrderUUID:   payload.Uuid,
+				State:       int32(payload.State),
+				OrderUUID:   payload.Uuid.Value,
 			},
 		},
 	); err != nil {

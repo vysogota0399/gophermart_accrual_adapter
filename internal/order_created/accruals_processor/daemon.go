@@ -140,7 +140,7 @@ func (dmn *Daemon) processEvent(ctx context.Context, e *events.OrderCreated) err
 			ctx,
 			repositories.AccrualFailedEventName,
 			&models.Meta{
-				OrderUUID:   e.Uuid,
+				OrderUUID:   e.Uuid.Value,
 				OrderNumber: e.Number,
 				Error:       err.Error(),
 			},
@@ -165,7 +165,7 @@ func (dmn *Daemon) processEvent(ctx context.Context, e *events.OrderCreated) err
 			ctx,
 			repositories.AccrualFailedEventName,
 			&models.Meta{
-				OrderUUID:   e.Uuid,
+				OrderUUID:   e.Uuid.Value,
 				OrderNumber: e.Number,
 				Error:       fmt.Sprintf("accruale failed error, go invalud status - %s", accrual.Status),
 			},
@@ -180,7 +180,7 @@ func (dmn *Daemon) processEvent(ctx context.Context, e *events.OrderCreated) err
 		ctx,
 		repositories.AccrualFinishedEventName,
 		&models.Meta{
-			OrderUUID:   e.Uuid,
+			OrderUUID:   e.Uuid.Value,
 			OrderNumber: e.Number,
 			Amount:      int64(accrual.Amount * 100),
 		},

@@ -7,24 +7,24 @@ import (
 )
 
 const (
-	NewState        = "new"
-	ProcessingState = "processing"
-	FinishedState   = "finished"
-	FailedState     = "failed"
-	SendState       = "send"
+	NewState int32 = iota
+	ProcessingState
+	FinishedState
+	FailedState
+	SendState
 )
 
 type Event struct {
 	UUID  string `json:"uuid"`
 	Name  string `json:"event_name"`
-	State string `json:"event_state"`
+	State int32  `json:"event_state"`
 	Meta  *Meta  `json:"meta"`
 }
 
 type Meta struct {
 	OrderUUID   string `json:"order_uuid"`
 	OrderNumber string `json:"order_number"`
-	State       string `json:"state,omitempty"`
+	State       int32  `json:"state,omitempty"`
 	Amount      int64  `json:"amount"`
 	Error       string `json:"error,omitempty"`
 }
