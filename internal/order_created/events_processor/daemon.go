@@ -137,6 +137,7 @@ func (dmn *Daemon) processEvent(ctx context.Context) error {
 		goods = append(
 			goods,
 			clients.CalculateParamsProduct{
+				// acrrual ничего не знает про nanos из googleapis, поэтому сделал упущение - отправляю без копеек
 				Price:       p.Price.Units,
 				Description: p.Name,
 			},

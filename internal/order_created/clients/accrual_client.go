@@ -10,6 +10,7 @@ import (
 
 	globalCfg "github.com/vysogota0399/gophermart_accural_adapter/internal/config"
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/logging"
+	"github.com/vysogota0399/gophermart_accural_adapter/internal/models"
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/order_created/config"
 	"go.uber.org/zap"
 	"resty.dev/v3"
@@ -72,28 +73,6 @@ func (cl *AccrualClient) Calculate(ctx context.Context, body CalculateParams) er
 	)
 }
 
-type Accrual struct {
-	Number string  `json:"order"`
-	Amount float64 `json:"accrual"`
-	Status string  `json:"status"`
-}
-
-func (a *Accrual) IsInvalid() bool {
-	return a.Status == "INVALID"
-}
-
-func (a *Accrual) IsRegistered() bool {
-	return a.Status == "REGISTERED"
-}
-
-func (a *Accrual) IsProcessing() bool {
-	return a.Status == "PROCESSING"
-}
-
-func (a *Accrual) IsProcessed() bool {
-	return a.Status == "PROCESSED"
-}
-
 type ErrSpam struct {
 	Message    string
 	RetryAfter time.Duration
@@ -103,7 +82,7 @@ func (e *ErrSpam) Error() string {
 	return e.Message
 }
 
-func (cl *AccrualClient) Result(ctx context.Context, number string) (*Accrual, error) {
+func (cl *AccrualClient) Result(ctx context.Context, number string) (*models.Accrual, error) {
 	req := cl.client.R()
 	req.URL = fmt.Sprintf("%s/api/orders/%s", cl.Address, number)
 	req.Method = http.MethodGet
@@ -123,7 +102,7 @@ func (cl *AccrualClient) Result(ctx context.Context, number string) (*Accrual, e
 		return nil, &ErrSpam{Message: "accrual_client: no more than N requests per minute allowed", RetryAfter: time.Duration(nextInt) * time.Second}
 	}
 
-	acc := Accrual{}
+	acc := models.Accrual{}
 	if err := json.Unmarshal([]byte(response.String()), &acc); err != nil {
 		return nil, fmt.Errorf("accrual_client: parse json error %w", err)
 	}

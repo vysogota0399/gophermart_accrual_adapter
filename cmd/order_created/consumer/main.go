@@ -32,7 +32,6 @@ func CreateApp() fx.Option {
 			order_created_config.MustNewConfig(),
 		),
 		fx.Invoke(
-
 			startConsumer,
 		),
 	)

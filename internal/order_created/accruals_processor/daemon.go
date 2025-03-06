@@ -12,6 +12,7 @@ import (
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/order_created/config"
 	"github.com/vysogota0399/gophermart_accural_adapter/internal/repositories"
 	"github.com/vysogota0399/gophermart_protos/gen/events"
+	"github.com/vysogota0399/gophermart_protos/utils/amount"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 )
@@ -52,7 +53,7 @@ type AccrualsQueue interface {
 }
 
 type AccrualClient interface {
-	Result(ctx context.Context, number string) (*clients.Accrual, error)
+	Result(ctx context.Context, number string) (*models.Accrual, error)
 }
 
 type AccrualEvents interface {
@@ -176,13 +177,19 @@ func (dmn *Daemon) processEvent(ctx context.Context, e *events.OrderCreated) err
 		return fmt.Errorf("accruals_processor/daemon: invalid accrual status %w", err)
 	}
 
+	acrual_amount, err := amount.FromFloat64(accrual.Amount)
+	if err != nil {
+		return fmt.Errorf("accruals_processor/daemon: parse accrual error %w", err)
+	}
+
 	if err := dmn.accrualEvents.CreateNewEvent(
 		ctx,
 		repositories.AccrualFinishedEventName,
 		&models.Meta{
 			OrderUUID:   e.Uuid.Value,
 			OrderNumber: e.Number,
-			Amount:      int64(accrual.Amount * 100),
+			AmountUnits: acrual_amount.Money.Units,
+			AmountNanos: acrual_amount.Money.Nanos,
 		},
 	); err != nil {
 		return fmt.Errorf("accruals_processor/daemon: save new event error %w", err)
