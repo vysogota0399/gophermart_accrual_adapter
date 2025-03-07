@@ -49,6 +49,7 @@ func (p *Publisher) Publish(ctx context.Context, e *models.Event) error {
 				EventUuid: &common.Uuid{Value: e.UUID},
 				OrderUuid: &common.Uuid{Value: e.Meta.OrderUUID},
 				Amount:    &money.Money{Units: e.Meta.AmountUnits, Nanos: e.Meta.AmountNanos},
+				OrderNumber: e.Meta.OrderNumber,
 			},
 		},
 	}

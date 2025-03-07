@@ -6,5 +6,7 @@ import (
 )
 
 func main() {
-	storage.RunMigration(config.MustNewConfig())
+	if err := storage.RunMigration(config.MustNewConfig()); err != nil {
+		panic(err)
+	}
 }

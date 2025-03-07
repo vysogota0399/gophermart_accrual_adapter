@@ -45,8 +45,9 @@ func (p *Publisher) Publish(ctx context.Context, e *models.Event) error {
 	accrual := events.AccrualProcessed{
 		Event: &events.AccrualProcessed_StartedEvent{
 			StartedEvent: &events.AccrualStartedEvent{
-				EventUuid: &common.Uuid{Value: e.UUID},
-				OrderUuid: &common.Uuid{Value: e.Meta.OrderUUID},
+				EventUuid:   &common.Uuid{Value: e.UUID},
+				OrderUuid:   &common.Uuid{Value: e.Meta.OrderUUID},
+				OrderNumber: e.Meta.OrderNumber,
 			},
 		},
 	}
