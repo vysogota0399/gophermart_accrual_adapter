@@ -1,0 +1,45 @@
+x-app: &app
+  labels:
+    logging: "promtail"
+    logging_jobname: "containerlogs"
+  build:
+    context: ../
+    dockerfile: .docker/Dockerfile
+  tty: true
+  stdin_open: true
+  environment:
+    - LOG_LEVEL=-1
+    - DATABASE_DSN=postgres://postgres:secret@db:5432/gophermart_accrual_adapter_development
+    - REDIS_DSN=redis://redis:6379/0
+    - KAFKA_BROKERS=kafka-1:9092,kafka-2:9092,kafka-3:9092
+    - GOPHERMART_GRPC_ADDRESS=gophermart-fake-orders:8050
+    - DAEMON_ORDER_CREATED_WORKERS_COUNT=1
+    - DAEMON_ACCRUAL_DAEMON_WORKERS_COUNT=1
+    - DAEMON_ORDER_CREATED_EVENT_POLL_INTERVAL=100
+    - DAEMON_ACCRUAL_FAILED_EVENT_POLL_INTERVAL=100
+    - DAEMON_ACCRUAL_FINISHED_EVENT_POLL_INTERVAL=100
+    - DAEMON_ACCRUAL_STARTED_EVENT_POLL_INTERVAL=100
+    - KAFKA_ORDER_CREATED_MAX_WAIT_INTERWAL=1000
+
+services:
+  gophermart_accrual_adapter-order_created_consumer:
+    <<: *app
+    container_name: gophermart_accrual_adapter-order_created_consumer
+    command:
+      ./order_created_consumer
+
+  gophermart_accrual_adapter-order_created_daemons:
+    <<: *app
+    container_name: gophermart_accrual_adapter-order_created_daemons
+    command:
+      ./order_created_daemons
+
+  gophermart_accrual_adapter-transaction_outbox:
+    <<: *app
+    container_name: gophermart_accrual_adapter-transaction_outbox
+    command:
+      ./transaction_outbox
+
+networks:
+  default:
+    name: gophermart-network

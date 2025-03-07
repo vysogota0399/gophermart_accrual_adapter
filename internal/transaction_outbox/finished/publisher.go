@@ -1,0 +1,82 @@
+package finished
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/segmentio/kafka-go"
+	"github.com/vysogota0399/gophermart_accural_adapter/internal/config"
+	"github.com/vysogota0399/gophermart_accural_adapter/internal/logging"
+	"github.com/vysogota0399/gophermart_accural_adapter/internal/models"
+	"github.com/vysogota0399/gophermart_accural_adapter/internal/transaction_outbox"
+	"github.com/vysogota0399/gophermart_protos/gen/common"
+	"github.com/vysogota0399/gophermart_protos/gen/events"
+	"go.uber.org/zap"
+	"google.golang.org/genproto/googleapis/type/money"
+	"google.golang.org/protobuf/proto"
+)
+
+type Publisher struct {
+	lg     *logging.ZapLogger
+	writer *kafka.Writer
+}
+
+func NewPublisher(
+	lg *logging.ZapLogger,
+	cfg *transaction_outbox.Config,
+	globalCFG *config.Config,
+	errLogger *logging.KafkaErrorLogger,
+	logger *logging.KafkaLogger,
+) *Publisher {
+	w := kafka.NewWriter(
+		kafka.WriterConfig{
+			Brokers:      globalCFG.KafkaBrokers,
+			Topic:        cfg.KafkaAccrualsTopic,
+			RequiredAcks: 0,
+			Logger:       logger,
+			ErrorLogger:  errLogger,
+			Balancer:     &kafka.Hash{},
+		},
+	)
+
+	return &Publisher{lg: lg, writer: w}
+}
+
+func (p *Publisher) Publish(ctx context.Context, e *models.Event) error {
+	accrual := events.AccrualProcessed{
+		Event: &events.AccrualProcessed_FinishedEvent{
+			FinishedEvent: &events.AccrualFinishedEvent{
+				EventUuid: &common.Uuid{Value: e.UUID},
+				OrderUuid: &common.Uuid{Value: e.Meta.OrderUUID},
+				Amount:    &money.Money{Units: e.Meta.AmountUnits, Nanos: e.Meta.AmountNanos},
+				OrderNumber: e.Meta.OrderNumber,
+			},
+		},
+	}
+
+	event, err := proto.Marshal(&accrual)
+	if err != nil {
+		return fmt.Errorf("transaction_outbox/finished/publisher: marashal failed  %w", err)
+	}
+
+	payload := kafka.Message{
+		Key:   []byte(e.Meta.OrderNumber),
+		Value: event,
+	}
+
+	p.lg.InfoCtx(
+		ctx,
+		"publish message to kafka",
+		zap.String("topic", p.writer.Topic),
+		zap.Any("message", e),
+	)
+
+	if err := p.writer.WriteMessages(
+		ctx,
+		payload,
+	); err != nil {
+		return fmt.Errorf("transaction_outbox/finished/publisher: write message to toppic failed %w", err)
+	}
+
+	return nil
+}
